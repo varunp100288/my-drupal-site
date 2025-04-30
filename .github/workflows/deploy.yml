@@ -17,6 +17,7 @@ jobs:
       # Step 2: Install Terminus (Pantheon CLI)
       - name: Install Terminus
         run: |
+          set -e
           mkdir -p $HOME/bin
           curl -L https://github.com/pantheon-systems/terminus/releases/download/3.0.4/terminus.phar -o $HOME/bin/terminus
           chmod +x $HOME/bin/terminus
@@ -29,27 +30,31 @@ jobs:
       # Step 4: Set up SSH
       - name: Set up SSH
         run: |
+          set -e
           mkdir -p $HOME/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
+          printf "%s\n" "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
           chmod 600 $HOME/.ssh/id_rsa
           ssh-keyscan -H codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in >> $HOME/.ssh/known_hosts
+
       # Step 5: Authenticate with Pantheon
       - name: Authenticate with Pantheon
         run: terminus auth:login --machine-token=${{ secrets.TERMINUS_MACHINE_TOKEN }}
 
-      # Step 6: Add Pantheon remote repository
+      # Step 6: Add Pantheon remote repository and push code
       - name: Add Pantheon remote repository
         run: |
+          set -e
           git config --global user.email "github@actions.com"
           git config --global user.name "GitHub Actions"
           
           git remote add pantheon ssh://codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f@codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in:2222/~/repository.git
           git push -f pantheon HEAD:master  # Push to Pantheon master branch
 
-      # Step 7: Drush CIM and CR on Pantheon (Dev)
+      # Step 7: Run Drush CIM and CR on Pantheon (Dev)
       - name: Run Drush CIM and CR
         run: |
-          TERMINUS_SITE=khabar2025  # Replace with your actual Pantheon site name if different
+          set -e
+          TERMINUS_SITE=khabar2025
           TERMINUS_ENV=dev
 
           terminus remote:drush $TERMINUS_SITE.$TERMINUS_ENV -- cim -y
