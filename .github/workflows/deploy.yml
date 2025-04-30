@@ -3,7 +3,7 @@ name: Deploy to Pantheon
 on:
   push:
     branches:
-      - master  # Trigger deploy when code is pushed to the 'master' branch
+      - main  # Trigger deploy when code is pushed to the 'main' branch
 
 jobs:
   deploy:
@@ -22,11 +22,11 @@ jobs:
           chmod +x $HOME/bin/terminus
           echo "$HOME/bin" >> $GITHUB_PATH
 
-      # Step 3: Set environment variable to allow PHP 8.2 (if required by Terminus)
+      # Step 3: Set environment variable for Terminus
       - name: Set environment variable for Terminus
         run: echo "TERMINUS_ALLOW_UNSUPPORTED_NEWER_PHP=true" >> $GITHUB_ENV
 
-      # Step 4: Add Pantheon SSH key to known hosts to avoid "Host key verification failed"
+      # Step 4: Set up SSH
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
@@ -45,13 +45,13 @@ jobs:
           git config --global user.name "GitHub Actions"
           
           git remote add pantheon ssh://codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f@codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in:2222/~/repository.git
-          git push -f pantheon HEAD:master  # Push code to the master branch on Pantheon
+          git push -f pantheon HEAD:master  # Push to Pantheon master branch
 
-      # Step 7: Run Drush config import and cache clear on Pantheon (Dev environment)
+      # Step 7: Drush CIM and CR on Pantheon (Dev)
       - name: Run Drush CIM and CR
         run: |
-          TERMINUS_SITE=mydrupalsitev  # Replace with your Pantheon site name
-          TERMINUS_ENV=dev  # Replace with your environment (e.g., dev, test, prod)
-          
+          TERMINUS_SITE=khabar2025  # Replace with your actual Pantheon site name if different
+          TERMINUS_ENV=dev
+
           terminus remote:drush $TERMINUS_SITE.$TERMINUS_ENV -- cim -y
           terminus remote:drush $TERMINUS_SITE.$TERMINUS_ENV -- cr
