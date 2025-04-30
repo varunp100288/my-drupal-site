@@ -3,52 +3,48 @@ name: Deploy to Pantheon
 on:
   push:
     branches:
-      - main  # Trigger deploy when code is pushed to the 'main' branch
+      - main  # Trigger on pushes to main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code from GitHub
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      # Step 2: Install Terminus (Pantheon CLI)
-      - name: Install Terminus
-        run: |
-          mkdir -p $HOME/bin
-          curl -L https://github.com/pantheon-systems/terminus/releases/download/3.0.4/terminus.phar -o $HOME/bin/terminus
-          chmod +x $HOME/bin/terminus
-          echo "$HOME/bin" >> $GITHUB_PATH
+    - name: Setup Terminus
+      uses: pantheon-systems/terminus-action@v1
+      with:
+        terminus_version: '3.x'
 
-      # Step 3: Set environment variable to allow PHP 8.2 (if required by Terminus)
-      - name: Set environment variable for Terminus
-        run: echo "TERMINUS_ALLOW_UNSUPPORTED_NEWER_PHP=true" >> $GITHUB_ENV
+    - name: SSH Key Setup
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -t rsa codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in >> ~/.ssh/known_hosts
 
-      # Step 4: Add Pantheon SSH key to known hosts to avoid "Host key verification failed"
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in >> ~/.ssh/known_hosts
+    - name: Authenticate with Terminus
+      run: terminus auth:login --machine-token $TERMINUS_MACHINE_TOKEN
 
-      # Step 5: Authenticate with Pantheon
-      - name: Authenticate with Pantheon
-        run: terminus auth:login --machine-token=${{ secrets.TERMINUS_MACHINE_TOKEN }}
+    - name: Clone Pantheon repository
+      run: |
+        git clone ssh://codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f@codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in:2222/~/repository.git -b master pantheon-site
+        cd pantheon-site
 
-      # Step 6: Add Pantheon remote repository
-      - name: Add Pantheon remote repository
-        run: |
-          git config --global user.email "github@actions.com"
-          git config --global user.name "GitHub Actions"
-          
-          git remote add pantheon ssh://codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f@codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in:2222/~/repository.git
-          git push -f pantheon HEAD:master
+    - name: Pull changes from GitHub main branch
+      run: |
+        git pull origin main  # Pull changes from the GitHub `main` branch
 
-      # Step 7: Run Drush config import and cache clear on Pantheon (Dev environment)
-      - name: Run Drush CIM and CR
-        run: |
-          terminus remote:drush mydrupalsitev.dev -- cim -y
-          terminus remote:drush mydrupalsitev.dev -- cr
+    - name: Commit and push changes to Pantheon
+      run: |
+        git add .
+        git commit -m "Deploy updates from GitHub"
+        git push origin master  # Push to Pantheon’s `master` branch
+
+    - name: Deploy and import config
+      run: |
+        terminus env:deploy --note "GitHub Actions Deployment"
+        terminus env:clear-caches
+        terminus remote:drush $PANTHEON_SITE.$PANTHEON_ENV -- cim -y
