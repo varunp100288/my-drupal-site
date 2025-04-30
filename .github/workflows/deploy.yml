@@ -54,7 +54,7 @@ jobs:
       - name: Run Drush CIM and CR
         run: |
           set -e
-          TERMINUS_SITE=khabar2025
+          TERMINUS_SITE=mydrupalsitev
           TERMINUS_ENV=dev
 
           terminus remote:drush $TERMINUS_SITE.$TERMINUS_ENV -- cim -y
