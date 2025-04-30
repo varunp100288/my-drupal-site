@@ -1,1 +1,37 @@
-name: Deploy Drupal App
+name: Deploy to Pantheon
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Terminus
+        run: |
+          mkdir $HOME/bin
+          curl -L https://github.com/pantheon-systems/terminus/releases/download/3.0.4/terminus.phar -o $HOME/bin/terminus
+          chmod +x $HOME/bin/terminus
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Authenticate with Pantheon
+        run: terminus auth:login --machine-token=${{ secrets.TERMINUS_MACHINE_TOKEN }}
+
+      - name: Push code to Pantheon
+        run: |
+          git config --global user.email "github@actions.com"
+          git config --global user.name "GitHub Actions"
+
+          git remote add pantheon ssh://codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f@codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in:2222/~/repository.git
+          git push -f pantheon HEAD:master
+
+      - name: Run Drush cim & cr on Pantheon (Dev env)
+        run: |
+          terminus remote:drush mydrupalsitev.dev -- cim -y
+          terminus remote:drush mydrupalsitev.dev -- cr
