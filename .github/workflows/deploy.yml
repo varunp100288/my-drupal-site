@@ -31,15 +31,21 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p $HOME/.ssh
+          
+          # Debugging: Check SSH private key length
+          echo "Checking SSH private key length..."
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | wc -c  # Length of key (in bytes)
+          
+          # Write the key to the file
           echo -e "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
           chmod 600 $HOME/.ssh/id_rsa
-          ssh-keyscan -H codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in >> $HOME/.ssh/known_hosts
+          
+          # Debugging: Verify the key was written properly (first 5 lines)
+          echo "First few lines of SSH key:"
+          head -n 5 $HOME/.ssh/id_rsa
 
-      # Debug SSH key content length and existence
-      - name: Debug SSH private key content
-        run: |
-          echo "Key length: $(wc -c < $HOME/.ssh/id_rsa)"
-          echo "Key exists: $(test -f $HOME/.ssh/id_rsa && echo 'Yes' || echo 'No')"
+          # Add host to known hosts
+          ssh-keyscan -H codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in >> $HOME/.ssh/known_hosts
 
       # Step 5: Authenticate with Pantheon
       - name: Authenticate with Pantheon
