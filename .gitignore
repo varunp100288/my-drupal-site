@@ -1,0 +1,20 @@
+# Ignore DDEV config
+.ddev/
+
+# Ignore local settings
+web/sites/default/settings.local.php
+web/sites/default/files/
+
+# Ignore vendor if using composer-based deploy
+/vendor/
+/node_modules/
+
+# Ignore OS and editor files
+*.log
+*.sql
+*.sqlite
+*.sql.gz
+.DS_Store
+.idea/
+.vscode/
+

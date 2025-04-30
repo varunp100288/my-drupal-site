@@ -1,0 +1,25 @@
+id: migrate_csv_source
+label: 'CSV to Node Migration'
+migration_group: csv_migrations
+source:
+  plugin: csv
+  path: modules/custom/custom_migration/data/data.csv
+  delimiter: ','
+  enclosure: '"'
+  header_row_count: 1
+  ids:
+    - id
+
+process:
+  title: title
+  body/value: body
+  body/format:
+    plugin: default_value
+    default_value: 'basic_html'
+  uid: uid
+
+destination:
+  plugin: 'entity:node'
+  default_bundle: article
+
+migration_dependencies: {}

@@ -1,0 +1,74 @@
+# id: migrate_json_source
+# label: 'JSON to Node Migration'
+# migration_group: json_migrations
+# source:
+#   plugin: url
+#   data_fetcher_plugin: file
+#   data_parser_plugin: json
+#   urls: modules/custom/custom_migration/data/json_data_fixed.json
+#   item_selector: '/data/*'
+#   ids:
+#     id: 
+#       type: integer
+# fields:
+#     - name: id
+#       label: "Unique identifier"
+#     - name: title
+#       label: "Article Title"
+#     - name: body
+#       label: "Body content"
+#     - name: uid
+#       label: "User ID"
+
+# process:
+#   title: title
+#   body/value: body
+#   body/format:
+#     plugin: default_value
+#     default_value: 'basic_html'
+#   uid: uid
+
+# destination:
+#   plugin: 'entity:node'
+#   default_bundle: article
+
+# migration_dependencies: {}
+
+id: migrate_json_source
+label: 'JSON to Node Migration'
+migration_group: json_migrations
+source:
+  plugin: url
+  data_fetcher_plugin: file
+  data_parser_plugin: json
+  urls:
+    - modules/custom/custom_migration/data/json_data_fixed.json
+  item_selector: data
+  fields:
+    - name: id
+      label: "Unique identifier"
+      selector: id
+    - name: title
+      label: "Article Title"
+      selector: title
+    - name: body
+      label: "Body content"
+      selector: body
+    - name: uid
+      label: "User ID"
+      selector: uid
+  ids:
+    id:
+      type: integer
+process:
+  title: title
+  body/value: body
+  body/format:
+    plugin: default_value
+    default_value: 'basic_html'
+  uid: uid
+  type:
+    plugin: default_value
+    default_value: article
+destination:
+  plugin: "entity:node"

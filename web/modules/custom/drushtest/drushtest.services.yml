@@ -1,0 +1,5 @@
+services:
+  drush.commands.drushtest:
+    class: Drupal\drushtest\Commands\HelloDrush
+    tags:
+      - { name: drush.command }
