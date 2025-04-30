@@ -65,7 +65,7 @@ jobs:
       - name: Run Drush CIM and CR
         run: |
           set -e
-          TERMINUS_SITE=yourpantheonsite  # <-- Update this with your Pantheon site machine name
+          TERMINUS_SITE=mydrupalsitev  # <-- Update this with your Pantheon site machine name
           TERMINUS_ENV=dev
 
           terminus remote:drush $TERMINUS_SITE.$TERMINUS_ENV -- cim -y
