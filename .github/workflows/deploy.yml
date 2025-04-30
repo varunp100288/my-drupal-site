@@ -20,6 +20,9 @@ jobs:
           chmod +x $HOME/bin/terminus
           echo "$HOME/bin" >> $GITHUB_PATH
 
+      - name: Set environment variable to allow PHP 8.2 for Terminus
+        run: echo "TERMINUS_ALLOW_UNSUPPORTED_NEWER_PHP=true" >> $GITHUB_ENV
+
       - name: Authenticate with Pantheon
         run: terminus auth:login --machine-token=${{ secrets.TERMINUS_MACHINE_TOKEN }}
 
