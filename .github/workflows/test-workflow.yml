@@ -1,0 +1,17 @@
+name: Test GitHub Action
+
+on:
+  push:
+    branches:
+      - main  # This triggers the workflow when changes are pushed to the 'main' branch
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3  # This checks out your code from the repository
+
+    - name: Hello World
+      run: echo "Hello, World!"  # This prints "Hello, World!" to the GitHub Actions log
