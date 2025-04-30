@@ -3,38 +3,52 @@ name: Deploy to Pantheon
 on:
   push:
     branches:
-      - main
+      - main  # Trigger deploy when code is pushed to the 'main' branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the code from GitHub
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step 2: Install Terminus (Pantheon CLI)
       - name: Install Terminus
         run: |
-          mkdir $HOME/bin
+          mkdir -p $HOME/bin
           curl -L https://github.com/pantheon-systems/terminus/releases/download/3.0.4/terminus.phar -o $HOME/bin/terminus
           chmod +x $HOME/bin/terminus
           echo "$HOME/bin" >> $GITHUB_PATH
 
-      - name: Set environment variable to allow PHP 8.2 for Terminus
+      # Step 3: Set environment variable to allow PHP 8.2 (if required by Terminus)
+      - name: Set environment variable for Terminus
         run: echo "TERMINUS_ALLOW_UNSUPPORTED_NEWER_PHP=true" >> $GITHUB_ENV
 
+      # Step 4: Add Pantheon SSH key to known hosts to avoid "Host key verification failed"
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in >> ~/.ssh/known_hosts
+
+      # Step 5: Authenticate with Pantheon
       - name: Authenticate with Pantheon
         run: terminus auth:login --machine-token=${{ secrets.TERMINUS_MACHINE_TOKEN }}
 
-      - name: Push code to Pantheon
+      # Step 6: Add Pantheon remote repository
+      - name: Add Pantheon remote repository
         run: |
           git config --global user.email "github@actions.com"
           git config --global user.name "GitHub Actions"
-
+          
           git remote add pantheon ssh://codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f@codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in:2222/~/repository.git
           git push -f pantheon HEAD:master
 
-      - name: Run Drush cim & cr on Pantheon (Dev env)
+      # Step 7: Run Drush config import and cache clear on Pantheon (Dev environment)
+      - name: Run Drush CIM and CR
         run: |
           terminus remote:drush mydrupalsitev.dev -- cim -y
           terminus remote:drush mydrupalsitev.dev -- cr
