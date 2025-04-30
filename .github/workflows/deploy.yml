@@ -30,11 +30,16 @@ jobs:
       # Step 4: Set up SSH
       - name: Set up SSH
         run: |
-          set -e
           mkdir -p $HOME/.ssh
-          printf "%s\n" "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
+          echo -e "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
           chmod 600 $HOME/.ssh/id_rsa
           ssh-keyscan -H codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in >> $HOME/.ssh/known_hosts
+
+      # Debug SSH key content length and existence
+      - name: Debug SSH private key content
+        run: |
+          echo "Key length: $(wc -c < $HOME/.ssh/id_rsa)"
+          echo "Key exists: $(test -f $HOME/.ssh/id_rsa && echo 'Yes' || echo 'No')"
 
       # Step 5: Authenticate with Pantheon
       - name: Authenticate with Pantheon
@@ -54,7 +59,7 @@ jobs:
       - name: Run Drush CIM and CR
         run: |
           set -e
-          TERMINUS_SITE=mydrupalsitev
+          TERMINUS_SITE=yourpantheonsite  # <-- Update this with your Pantheon site machine name
           TERMINUS_ENV=dev
 
           terminus remote:drush $TERMINUS_SITE.$TERMINUS_ENV -- cim -y
