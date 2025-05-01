@@ -3,41 +3,49 @@ name: Deploy to Pantheon
 on:
   push:
     branches:
-      - main
+      - main  # Trigger on pushes to the 'main' branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      # Checkout the repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Debugging: Check SSH_PRIVATE_KEY length
+      # Debugging: Check SSH_PRIVATE_KEY secret
+      - name: Check if SSH_PRIVATE_KEY is set
         run: |
-          echo "SSH_PRIVATE_KEY Length: ${#SSH_PRIVATE_KEY}"
+          if [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "SSH_PRIVATE_KEY is not set"
+            exit 1
+          else
+            echo "SSH_PRIVATE_KEY is set"
+          fi
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Set up SSH key
+      # Set up SSH keys
+      - name: Set up SSH keys
         run: |
           mkdir -p $HOME/.ssh
-          
-          # Save the SSH private key from the GitHub secret
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
-
+          echo "$SSH_PRIVATE_KEY" > $HOME/.ssh/id_rsa
           chmod 600 $HOME/.ssh/id_rsa
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
-          # Check permissions of id_rsa
-          ls -l $HOME/.ssh/
-
-          # Add Pantheon Git host to known_hosts
+      # Add Pantheon to known hosts
+      - name: Add Pantheon to known hosts
+        run: |
           ssh-keyscan -H codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in >> $HOME/.ssh/known_hosts
 
-          # List known hosts
-          cat $HOME/.ssh/known_hosts
+      # Debugging: List files in .ssh directory
+      - name: List .ssh directory files
+        run: ls -la $HOME/.ssh
 
-      - name: Push to Pantheon
+      # Deploy to Pantheon
+      - name: Deploy to Pantheon
         run: |
-          git remote add pantheon ssh://codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in:2222/~/repository.git || true
-          git push pantheon main:master --force
+          git remote add pantheon git@codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in:~pantheon.git
+          git push pantheon main
