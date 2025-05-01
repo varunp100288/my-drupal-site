@@ -3,16 +3,15 @@ name: Deploy to Pantheon
 on:
   push:
     branches:
-      - main  # GitHub branch to watch for changes
+      - main
 
 jobs:
   deploy:
-    name: Deploy code to Pantheon
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up SSH key
         run: |
@@ -21,9 +20,7 @@ jobs:
           chmod 600 $HOME/.ssh/id_rsa
           ssh-keyscan -H codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in >> $HOME/.ssh/known_hosts
 
-      - name: Push to Pantheon Git
+      - name: Push to Pantheon
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git remote add pantheon ssh://codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f@codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in:2222/~/repository.git
-          git push pantheon HEAD:master --force
+          git remote add pantheon ssh://codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in:2222/~/repository.git || true
+          git push pantheon main:master --force
