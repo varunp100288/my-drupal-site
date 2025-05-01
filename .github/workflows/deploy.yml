@@ -15,10 +15,26 @@ jobs:
 
       - name: Set up SSH key
         run: |
+          # Debugging: Verify GitHub secret content
+          echo "SSH_PRIVATE_KEY: ${#${{ secrets.SSH_PRIVATE_KEY }}} characters"
+
+          # Prepare the .ssh directory
           mkdir -p $HOME/.ssh
+          
+          # Debugging: Check if the private key is correctly added
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
+          cat $HOME/.ssh/id_rsa
+
           chmod 600 $HOME/.ssh/id_rsa
+
+          # Debugging: Check permissions of id_rsa
+          ls -l $HOME/.ssh/
+
+          # Add Pantheon Git host to known_hosts
           ssh-keyscan -H codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in >> $HOME/.ssh/known_hosts
+
+          # Debugging: List known hosts
+          cat $HOME/.ssh/known_hosts
 
       - name: Push to Pantheon
         run: |
