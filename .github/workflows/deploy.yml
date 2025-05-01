@@ -35,10 +35,18 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # Add Pantheon to known hosts
+      # Disable StrictHostKeyChecking for Pantheon
+      - name: Configure SSH
+        run: |
+          echo -e "Host *\n  StrictHostKeyChecking no\n  UserKnownHostsFile /dev/null" >> ~/.ssh/config
+
+      # Add Pantheon to known hosts (verbose mode for debugging)
       - name: Add Pantheon to known hosts
         run: |
-          ssh-keyscan -H codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in >> $HOME/.ssh/known_hosts
+          echo "Running ssh-keyscan..."
+          ssh-keyscan -v -H codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in >> $HOME/.ssh/known_hosts
+          echo "ssh-keyscan completed"
+        continue-on-error: true  # Continue even if ssh-keyscan fails
 
       # Debugging: List files in .ssh directory
       - name: List .ssh directory files
