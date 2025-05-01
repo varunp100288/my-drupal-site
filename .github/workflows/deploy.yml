@@ -44,8 +44,13 @@ jobs:
       - name: List .ssh directory files
         run: ls -la $HOME/.ssh
 
-      # Deploy to Pantheon
+      # Verify SSH connection to Pantheon
+      - name: Test SSH connection to Pantheon
+        run: |
+          ssh -T git@codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in
+
+      # Deploy to Pantheon (using master branch)
       - name: Deploy to Pantheon
         run: |
-          git remote add pantheon git@codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in:~pantheon.git
-          git push pantheon main
+          git remote add pantheon git@codeserver.dev.3552ce4b-c642-4933-b08d-c3377021392f.drush.in:~mydrupalsitev.git
+          git push pantheon master  # Push to master branch instead of main
